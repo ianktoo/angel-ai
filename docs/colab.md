@@ -18,7 +18,7 @@ fails, check what Python/CUDA version the runtime currently ships and adjust
 `requires-python` / the `cuda` extra's torch pin accordingly — treat this as
 a starting point to verify, not a guarantee.
 
-## One-line bootstrap
+## Bootstrap
 
 In a notebook cell:
 
@@ -28,11 +28,23 @@ In a notebook cell:
 !bash scripts/colab_bootstrap.sh
 ```
 
-`scripts/colab_bootstrap.sh` does three things:
-1. Installs `uv` (`pip install uv`, since Colab doesn't ship it).
-2. Runs `uv sync --extra cuda` to install the CUDA-enabled dependency set.
-3. Mounts Google Drive at `/content/drive` (interactive auth prompt appears
-   in the notebook — approve it there).
+`scripts/colab_bootstrap.sh` installs `uv` (`pip install uv`, since Colab
+doesn't ship it) and runs `uv sync --extra cuda` to install the CUDA-enabled
+dependency set.
+
+**Mount Google Drive in a separate cell, directly** (not via `!bash`):
+
+```python
+from google.colab import drive
+drive.mount("/content/drive")
+```
+
+This has to run as an actual notebook cell rather than inside the bootstrap
+script. `drive.mount()` talks to the Colab frontend through the notebook's
+own IPython kernel (via `get_ipython()`); a subprocess spawned by `!bash
+colab_bootstrap.sh` has no such kernel, so calling it from there fails with
+`AttributeError: 'NoneType' object has no attribute 'kernel'` (confirmed by
+running it that way first).
 
 ## Persisting checkpoints and MLflow data across sessions
 
@@ -47,7 +59,9 @@ uv run python -m angel_ai.training \
   output_dir=/content/drive/MyDrive/angel-ai-runs/run-001
 ```
 
-Resuming after a session reset (re-run the bootstrap cell first, then):
+Resuming after a session reset (re-run the clone, bootstrap, and Drive-mount
+cells first — the VM and its filesystem are wiped, only Drive survives —
+then):
 
 ```bash
 uv run python -m angel_ai.training \
