@@ -1,0 +1,8 @@
+# A meaningfully bigger step up from the 0.5B default (~3x the parameters).
+# Should still fit in fp32 with LoRA on 15GB of shared RAM, but is a tighter
+# fit than qwen2_5_0_5b -- lower training.per_device_train_batch_size and
+# raise training.gradient_accumulation_steps to compensate if you hit an
+# out-of-memory error.
+name: Qwen/Qwen2.5-1.5B-Instruct
+dtype: float32
+trust_remote_code: false

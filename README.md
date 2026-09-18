@@ -127,6 +127,30 @@ Datasets are JSONL, one chat-style record per line:
 - A bundled 4-record example lives at `src/angel_ai/data/examples/tiny/`,
   used by `just dry-run` and the fast test suite.
 
+### Ingesting a dataset from the Hugging Face Hub
+
+Instead of a local JSONL directory, set `data.source: huggingface` to pull a
+dataset straight from the Hub (see `configs/data/hf_alpaca.yaml`):
+
+```yaml
+name: hf-alpaca
+source: huggingface
+hf:
+  repo_id: tatsu-lab/alpaca
+  config_name: null
+  split_mapping: {} # e.g. {validation: test} if the hub dataset only has train/test
+  prompt_column: null # set both only if not already messages/Alpaca-formatted
+  response_column: null
+max_train_samples: null # set e.g. 50 for a quick run without the full dataset
+```
+
+Rows already in `messages` or Alpaca (`instruction`/`input`/`output`) format
+convert automatically; anything else needs `prompt_column`/`response_column`
+to map two arbitrary columns into a single user/assistant turn. A gated or
+rate-limited Hub dataset needs `HF_TOKEN` set in the environment
+(`huggingface-cli login`, or export the token directly) the same as any
+`transformers`/`datasets` usage.
+
 ## Backend capability matrix
 
 | Backend    | Training | QLoRA (bitsandbytes) | Notes |

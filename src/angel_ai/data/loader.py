@@ -102,4 +102,4 @@ def load_dataset(data_cfg, *, validate: bool = True):
     )
 
 
-__all__ = ["load_split", "load_dataset_dict", "load_dataset", "validate_file"]
+__all__ = ["load_dataset", "load_dataset_dict", "load_split", "validate_file"]
