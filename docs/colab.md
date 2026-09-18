@@ -17,7 +17,7 @@ a starting point to verify, not a guarantee.
 In a notebook cell:
 
 ```python
-!git clone <your-repo-url> angel-ai
+!git clone https://github.com/ianktoo/angel-ai angel-ai
 %cd angel-ai
 !bash scripts/colab_bootstrap.sh
 ```
