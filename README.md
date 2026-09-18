@@ -151,6 +151,9 @@ Google Drive so they survive session resets.
 - `just check` (lint + config validation) and `just test` (fast unit tests)
   should pass before opening a PR; `just test-slow` before merging anything
   that touches training/eval/export internals.
+- Versioning follows `pyproject.toml`'s `[project].version`; a merge that
+  bumps it gets tagged `vX.Y.Z` on `main` (see [`CHANGELOG.md`](CHANGELOG.md)).
+  Pre-1.0, expect breaking config changes between minor versions.
 
 ## Troubleshooting
 
