@@ -1,5 +1,11 @@
 # Running angel-ai on Google Colab (or a similar cloud GPU notebook)
 
+**Quickest path**: open [`notebooks/colab_train.ipynb`](../notebooks/colab_train.ipynb)
+directly in Colab — [![Open In Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/ianktoo/angel-ai/blob/main/notebooks/colab_train.ipynb) —
+which walks through every step below as runnable cells (bootstrap, train,
+resume, evaluate, export, view results). The rest of this doc explains what
+those cells do and why, for anyone scripting it outside a notebook.
+
 This isn't a separate codebase or branch — Colab's NVIDIA GPU is reached
 through the same `backend=cuda` config path used by any local NVIDIA box.
 The only Colab-specific concerns are: `uv` isn't preinstalled, and the

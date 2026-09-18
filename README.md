@@ -142,10 +142,13 @@ and a suggested fix, rather than failing deep inside a third-party library.
 
 ## Running on Google Colab / cloud GPUs
 
-See [`docs/colab.md`](docs/colab.md). In short: `backend=cuda` is the same
-config path a Colab GPU runtime needs — no separate branch, just
-`uv sync --extra cuda` in the notebook and pointing checkpoints/MLflow at
-Google Drive so they survive session resets.
+Open [`notebooks/colab_train.ipynb`](notebooks/colab_train.ipynb) directly in
+Colab for a ready-to-run notebook (bootstrap, train, resume, evaluate,
+export), or see [`docs/colab.md`](docs/colab.md) for the same steps as plain
+shell commands. In short: `backend=cuda` is the same config path a Colab GPU
+runtime needs — no separate branch, just `uv sync --extra cuda` in the
+notebook and pointing checkpoints/MLflow at Google Drive so they survive
+session resets.
 
 ## Development workflow
 
