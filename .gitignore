@@ -1,0 +1,31 @@
+# Python / uv
+.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+.ruff_cache/
+*.egg-info/
+
+# Secrets / local env overrides -- never commit these
+.env
+.env.*
+*.key
+*.pem
+secrets.yaml
+configs/**/local_*.yaml
+
+# Runs, checkpoints, datasets, exported models (large / machine-specific)
+outputs/
+mlruns/
+*.safetensors
+*.onnx
+*.pt
+*.bin
+data/
+!src/angel_ai/data/examples/**
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
