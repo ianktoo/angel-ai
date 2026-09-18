@@ -50,3 +50,9 @@ def test_bigger_model_config_composes():
     with initialize_config_dir(config_dir=CONFIG_DIR, version_base=None):
         cfg = compose(config_name="config", overrides=["model=qwen2_5_1_5b"])
     assert cfg.model.name == "Qwen/Qwen2.5-1.5B-Instruct"
+
+
+def test_eval_max_samples_override_applies():
+    with initialize_config_dir(config_dir=CONFIG_DIR, version_base=None):
+        cfg = compose(config_name="config", overrides=["eval.max_eval_samples=20"])
+    assert cfg.eval.max_eval_samples == 20

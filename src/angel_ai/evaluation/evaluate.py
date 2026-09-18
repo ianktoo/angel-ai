@@ -42,8 +42,12 @@ def run_evaluation(cfg: DictConfig) -> dict[str, float]:
 
     dataset = load_dataset(cfg.data)
     split = "validation" if "validation" in dataset else "train"
+    eval_split = dataset[split]
+    max_eval_samples = cfg.eval.get("max_eval_samples")
+    if max_eval_samples:
+        eval_split = eval_split.select(range(min(len(eval_split), max_eval_samples)))
     eval_dataset = tokenize_dataset(
-        dataset[split],
+        eval_split,
         tokenizer,
         max_seq_length=cfg.eval.max_seq_length,
         default_system_prompt=cfg.data.default_system_prompt,

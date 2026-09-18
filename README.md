@@ -126,6 +126,11 @@ Compare runs with `mlflow ui --backend-store-uri sqlite:///<output_dir>/mlruns/m
 tracking data lives in a local SQLite file instead — still local, still free,
 no server or account).
 
+`just infer` evaluates the `validation` split if the dataset has one,
+otherwise `train` -- for a Hub dataset with only a `train` split (like
+`tatsu-lab/alpaca`), set `eval.max_eval_samples` (e.g. `20`) or evaluation
+will run over the *entire* dataset with no cap.
+
 ## Dataset format
 
 Datasets are JSONL, one chat-style record per line:
