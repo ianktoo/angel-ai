@@ -1,3 +1,5 @@
+from typing import ClassVar
+
 import torch
 from torch import nn
 
@@ -17,12 +19,12 @@ class _TinyModel(nn.Module):
         super().__init__()
         self.linear = nn.Linear(2, 2)
 
-    def save_pretrained(self, path):
+    def save_pretrained(self, path, state_dict=None):
         from pathlib import Path
 
         path = Path(path)
         path.mkdir(parents=True, exist_ok=True)
-        torch.save(self.state_dict(), path / "weights.pt")
+        torch.save(state_dict if state_dict is not None else self.state_dict(), path / "weights.pt")
 
     def load_adapter(self, path, adapter_name=None):
         from pathlib import Path
@@ -85,3 +87,21 @@ def test_resolve_resume_path_latest(tmp_path):
 
     resolved = resolve_resume_path(tmp_path, "latest")
     assert resolved.name == "checkpoint-step-1"
+
+
+class _FakePeftModel(_TinyModel):
+    """Stand-in for a PEFT model: has `peft_config`, so save_checkpoint should
+    take the get_peft_model_state_dict path instead of plain state_dict()."""
+
+    peft_config: ClassVar[dict] = {"default": object()}
+
+
+def test_save_checkpoint_uses_peft_state_dict_for_peft_models(tmp_path, mocker):
+    model = _FakePeftModel()
+    optimizer = torch.optim.SGD(model.parameters(), lr=0.1)
+    fake_state = {"lora.weight": model.linear.weight.detach().clone()}
+    mocked = mocker.patch("peft.get_peft_model_state_dict", return_value=fake_state)
+
+    save_checkpoint(tmp_path, model=model, optimizer=optimizer, state=TrainerState(step=1))
+
+    mocked.assert_called_once_with(model)

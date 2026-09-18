@@ -39,6 +39,23 @@ def _checkpoint_dir(output_dir: Path, step: int) -> Path:
     return output_dir / f"{CHECKPOINT_PREFIX}{step}"
 
 
+def _to_cpu(obj: Any) -> Any:
+    """Recursively move tensors in a (possibly nested) structure to CPU.
+
+    Returns copies -- does not mutate the live optimizer state -- so training
+    can keep running on-device after a checkpoint is written.
+    """
+    import torch
+
+    if isinstance(obj, torch.Tensor):
+        return obj.cpu()
+    if isinstance(obj, dict):
+        return {k: _to_cpu(v) for k, v in obj.items()}
+    if isinstance(obj, list):
+        return [_to_cpu(v) for v in obj]
+    return obj
+
+
 def save_checkpoint(
     output_dir: Path,
     *,
@@ -58,9 +75,28 @@ def save_checkpoint(
     ckpt_dir = _checkpoint_dir(output_dir, state.step)
     ckpt_dir.mkdir(parents=True, exist_ok=True)
 
+    # Serialize only from CPU-resident copies of the (small) LoRA adapter
+    # tensors and optimizer state -- never the full base model. DirectML's
+    # opaque "privateuseone" tensors can't be introspected by safetensors
+    # (`NotImplementedError: Cannot access storage of OpaqueTensorImpl`) and
+    # can't be safely reloaded via pickle either (the pickled
+    # device-reconstruction call isn't in torch's default
+    # `weights_only=True` allowlist). Per-tensor `.cpu()` on just the adapter
+    # weights fixes both; moving the *entire* multi-hundred-million-parameter
+    # base model with `model.to("cpu")` was tried first and reliably
+    # segfaulted the process on this machine's DirectML driver -- adapter-only
+    # is both correct (LoRA only needs to persist the adapter) and the only
+    # approach that didn't crash.
     try:
-        model.save_pretrained(ckpt_dir / "adapter")
-        torch.save(optimizer.state_dict(), ckpt_dir / "optimizer.pt")
+        if hasattr(model, "peft_config"):
+            from peft import get_peft_model_state_dict
+
+            raw_state = get_peft_model_state_dict(model)
+        else:
+            raw_state = model.state_dict()
+        adapter_state = {k: v.detach().cpu() for k, v in raw_state.items()}
+        model.save_pretrained(ckpt_dir / "adapter", state_dict=adapter_state)
+        torch.save(_to_cpu(optimizer.state_dict()), ckpt_dir / "optimizer.pt")
         torch.save(
             {
                 "torch": torch.get_rng_state(),
