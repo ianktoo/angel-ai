@@ -15,14 +15,17 @@ secrets.yaml
 configs/**/local_*.yaml
 
 # Runs, checkpoints, datasets, exported models (large / machine-specific)
+# NOTE: /data/ is anchored to the repo root -- a bare `data/` would also
+# match src/angel_ai/data/ and configs/data/ (any directory named "data" at
+# any depth), which previously and silently excluded actual package source
+# and config files from every commit. Keep the leading slash.
 outputs/
 mlruns/
 *.safetensors
 *.onnx
 *.pt
 *.bin
-data/
-!src/angel_ai/data/examples/**
+/data/
 
 # OS / editor
 .DS_Store

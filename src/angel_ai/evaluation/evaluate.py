@@ -19,7 +19,7 @@ from torch.utils.data import DataLoader
 from angel_ai import tracking
 from angel_ai.backends.registry import get_backend
 from angel_ai.checkpointing import find_latest_checkpoint
-from angel_ai.data.loader import load_dataset_dict
+from angel_ai.data.loader import load_dataset
 from angel_ai.hydra_utils import CONFIG_DIR
 from angel_ai.progress import log, stage_progress
 from angel_ai.training.prepare import apply_lora, load_base_model, load_tokenizer
@@ -40,10 +40,14 @@ def run_evaluation(cfg: DictConfig) -> dict[str, float]:
     else:
         log("No checkpoint found; evaluating the base model.", style="yellow")
 
-    dataset = load_dataset_dict(cfg.data.dataset_dir)
+    dataset = load_dataset(cfg.data)
     split = "validation" if "validation" in dataset else "train"
+    eval_split = dataset[split]
+    max_eval_samples = cfg.eval.get("max_eval_samples")
+    if max_eval_samples:
+        eval_split = eval_split.select(range(min(len(eval_split), max_eval_samples)))
     eval_dataset = tokenize_dataset(
-        dataset[split],
+        eval_split,
         tokenizer,
         max_seq_length=cfg.eval.max_seq_length,
         default_system_prompt=cfg.data.default_system_prompt,

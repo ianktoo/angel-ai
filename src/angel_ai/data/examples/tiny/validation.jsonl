@@ -1,0 +1,2 @@
+{"messages": [{"role": "user", "content": "What hardware does angel-ai target?"}, {"role": "assistant", "content": "Whatever you already have: DirectML-capable GPUs, CUDA GPUs, or CPU, selected by config."}]}
+{"messages": [{"role": "user", "content": "Can the NPU be used for training?"}, {"role": "assistant", "content": "No, the NPU is inference-only; training happens on the GPU or CPU."}]}

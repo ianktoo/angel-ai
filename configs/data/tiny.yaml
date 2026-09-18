@@ -1,0 +1,8 @@
+# Hand-written 4-record dataset bundled with the repo -- used by `just dry-run`
+# and fast unit tests so smoke tests never depend on downloading a real dataset.
+name: tiny
+source: local
+dataset_dir: src/angel_ai/data/examples/tiny # relative to repo root (uv run / just always invoke from there)
+max_seq_length: 512
+max_train_samples: null
+default_system_prompt: "You are a helpful assistant."

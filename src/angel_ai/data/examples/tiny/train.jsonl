@@ -1,0 +1,4 @@
+{"messages": [{"role": "system", "content": "You are a concise, helpful assistant."}, {"role": "user", "content": "What is LoRA?"}, {"role": "assistant", "content": "LoRA (Low-Rank Adaptation) finetunes a model by training small low-rank matrices instead of all its weights."}]}
+{"messages": [{"role": "user", "content": "What does angel-ai do?"}, {"role": "assistant", "content": "angel-ai is a hardware-agnostic pipeline for finetuning, optimizing, and evaluating LLMs on whatever hardware you already have."}]}
+{"messages": [{"role": "user", "content": "Why use DirectML instead of CUDA?"}, {"role": "assistant", "content": "DirectML lets you run PyTorch on non-NVIDIA GPUs, such as AMD or Intel integrated graphics, without needing CUDA."}]}
+{"messages": [{"role": "user", "content": "What is a checkpoint used for?"}, {"role": "assistant", "content": "A checkpoint saves model, optimizer, and RNG state so a training run can be resumed later without starting over."}]}

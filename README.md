@@ -59,6 +59,20 @@ If you're running this on different hardware, the config system should
 adapt, but the DirectML/NPU-specific code paths were only verified against
 the above — expect to file/fix issues.
 
+**Confirmed DirectML size limit on this machine**: `backend=directml` trains
+`qwen2_5_0_5b` reliably, but reproducibly crashes moving `qwen2_5_1_5b` onto
+the device (`RuntimeError: The GPU device instance has been suspended`, at
+`model.to(device)`, regardless of fp32/fp16) — a driver-level limit, not a
+memory-size-tunable one (halving to fp16 didn't help). Use `backend=cpu` for
+larger models on this hardware until/unless a newer DirectML driver fixes it.
+
+**Confirmed ONNX export memory limit on this machine**: `optimize.export`
+reliably works for `qwen2_5_0_5b`, but segfaults with no Python traceback
+when exporting `qwen2_5_1_5b` (fp32 weights alone are ~6GB, and tracing +
+protobuf serialization needs headroom on top of that within 15GB shared
+RAM). Export the smaller model on this hardware, or export from a machine/
+environment with more RAM.
+
 ## Setup
 
 Requires [`uv`](https://docs.astral.sh/uv/). `torch-directml` only supports
@@ -91,6 +105,9 @@ just export optimize.target=npu backend=directml output_dir=outputs/run-1  # exp
 just sweep                                          # Optuna hyperparameter search
 just test                                          # fast unit tests (no model loading)
 just test-slow                                      # + real tiny-model smoke tests
+
+# a bigger model against a real dataset pulled from the Hub instead of the tiny bundled example
+just train backend=cpu model=qwen2_5_1_5b data=hf_alpaca data.max_train_samples=50 output_dir=outputs/run-2
 ```
 
 `output_dir` defaults to a fresh `outputs/<timestamp>` on every invocation, so
@@ -109,6 +126,11 @@ Compare runs with `mlflow ui --backend-store-uri sqlite:///<output_dir>/mlruns/m
 tracking data lives in a local SQLite file instead — still local, still free,
 no server or account).
 
+`just infer` evaluates the `validation` split if the dataset has one,
+otherwise `train` -- for a Hub dataset with only a `train` split (like
+`tatsu-lab/alpaca`), set `eval.max_eval_samples` (e.g. `20`) or evaluation
+will run over the *entire* dataset with no cap.
+
 ## Dataset format
 
 Datasets are JSONL, one chat-style record per line:
@@ -126,6 +148,30 @@ Datasets are JSONL, one chat-style record per line:
   also accepted and converted automatically — see `angel_ai/data/converters.py`.
 - A bundled 4-record example lives at `src/angel_ai/data/examples/tiny/`,
   used by `just dry-run` and the fast test suite.
+
+### Ingesting a dataset from the Hugging Face Hub
+
+Instead of a local JSONL directory, set `data.source: huggingface` to pull a
+dataset straight from the Hub (see `configs/data/hf_alpaca.yaml`):
+
+```yaml
+name: hf-alpaca
+source: huggingface
+hf:
+  repo_id: tatsu-lab/alpaca
+  config_name: null
+  split_mapping: {} # e.g. {validation: test} if the hub dataset only has train/test
+  prompt_column: null # set both only if not already messages/Alpaca-formatted
+  response_column: null
+max_train_samples: null # set e.g. 50 for a quick run without the full dataset
+```
+
+Rows already in `messages` or Alpaca (`instruction`/`input`/`output`) format
+convert automatically; anything else needs `prompt_column`/`response_column`
+to map two arbitrary columns into a single user/assistant turn. A gated or
+rate-limited Hub dataset needs `HF_TOKEN` set in the environment
+(`huggingface-cli login`, or export the token directly) the same as any
+`transformers`/`datasets` usage.
 
 ## Backend capability matrix
 

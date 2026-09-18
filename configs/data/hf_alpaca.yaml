@@ -1,0 +1,21 @@
+# Template for ingesting a dataset directly from the Hugging Face Hub
+# instead of a local JSONL file. This example points at the classic Alpaca
+# instruction-tuning dataset, which already has instruction/input/output
+# columns our converter understands -- no prompt_column/response_column
+# mapping needed.
+#
+# For a dataset that ISN'T already messages- or Alpaca-formatted, set
+# hf.prompt_column/hf.response_column to map two arbitrary columns into a
+# single user/assistant turn. For a dataset with different split names than
+# train/validation/test, use hf.split_mapping (e.g. {validation: test}).
+name: hf-alpaca
+source: huggingface
+hf:
+  repo_id: tatsu-lab/alpaca
+  config_name: null
+  split_mapping: {} # e.g. {validation: test} if the hub dataset only has train/test
+  prompt_column: null # only needed if not already messages/Alpaca-formatted
+  response_column: null
+max_seq_length: 1024
+max_train_samples: null # set to e.g. 50 for a quick real run without the full dataset
+default_system_prompt: "You are a helpful assistant."

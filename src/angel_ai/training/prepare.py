@@ -32,7 +32,7 @@ def load_tokenizer(model_cfg: Any):
     return tokenizer
 
 
-def load_base_model(model_cfg: Any, backend: Backend):
+def load_base_model(model_cfg: Any, backend: Backend, *, attn_implementation: str | None = None):
     import torch
     from transformers import AutoModelForCausalLM
 
@@ -41,6 +41,7 @@ def load_base_model(model_cfg: Any, backend: Backend):
         model_cfg.name,
         torch_dtype=dtype,
         trust_remote_code=model_cfg.trust_remote_code,
+        attn_implementation=attn_implementation,
     )
     return backend.prepare_model(model, model_cfg)
 

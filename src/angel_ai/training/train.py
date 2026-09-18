@@ -18,7 +18,7 @@ from torch.utils.data import DataLoader
 
 from angel_ai import checkpointing, tracking
 from angel_ai.backends.registry import get_backend
-from angel_ai.data.loader import load_dataset_dict
+from angel_ai.data.loader import load_dataset
 from angel_ai.hydra_utils import CONFIG_DIR
 from angel_ai.progress import log, stage_progress
 from angel_ai.training.prepare import apply_lora, load_base_model, load_tokenizer
@@ -35,9 +35,13 @@ def run_training(cfg: DictConfig) -> Path:
     model = load_base_model(cfg.model, backend)
     model = apply_lora(model, cfg.training, backend)
 
-    dataset = load_dataset_dict(cfg.data.dataset_dir)
+    dataset = load_dataset(cfg.data)
+    train_split = dataset["train"]
+    max_train_samples = cfg.data.get("max_train_samples")
+    if max_train_samples:
+        train_split = train_split.select(range(min(len(train_split), max_train_samples)))
     train_dataset = tokenize_dataset(
-        dataset["train"],
+        train_split,
         tokenizer,
         max_seq_length=cfg.data.max_seq_length,
         default_system_prompt=cfg.data.default_system_prompt,

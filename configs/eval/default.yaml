@@ -1,3 +1,4 @@
 metrics: ["loss", "perplexity"]
 batch_size: 1
 max_seq_length: 512
+max_eval_samples: null # set e.g. 20 to avoid evaluating a whole Hub dataset with no validation split
