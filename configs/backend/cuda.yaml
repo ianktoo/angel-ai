@@ -1,0 +1,2 @@
+# Targets an NVIDIA GPU, local or cloud (e.g. Google Colab). Supports QLoRA.
+name: cuda

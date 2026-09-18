@@ -1,0 +1,2 @@
+# Auto-detects the best available backend in priority order: directml, cuda, cpu.
+name: auto

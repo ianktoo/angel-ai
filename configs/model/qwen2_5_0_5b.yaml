@@ -1,0 +1,4 @@
+# Small instruct model, fits comfortably in ~15GB shared RAM with LoRA.
+name: Qwen/Qwen2.5-0.5B-Instruct
+dtype: float32 # bfloat16/fp16 autocast isn't available on DirectML yet
+trust_remote_code: false

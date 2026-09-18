@@ -1,0 +1,2 @@
+# CPU-only fallback. Slow, but always available -- used for tests and dry-runs.
+name: cpu

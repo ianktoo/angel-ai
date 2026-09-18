@@ -1,0 +1,9 @@
+# A tiny public model used purely for fast smoke tests / dry-runs, not real
+# finetuning quality. Loads in seconds even on CPU.
+# NOTE: this is a GPT-2 architecture, whose attention module is named
+# "c_attn" (a combined QKV projection), not "q_proj"/"v_proj" like the real
+# Qwen/Llama configs' LoRA target_modules. Dry-run invocations override
+# training.lora.target_modules=[c_attn] for this reason -- see justfile/scripts.
+name: hf-internal-testing/tiny-random-gpt2
+dtype: float32
+trust_remote_code: false

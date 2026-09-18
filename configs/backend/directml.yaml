@@ -1,0 +1,3 @@
+# Targets a DirectML-capable GPU (e.g. this machine's Radeon 840M iGPU).
+# QLoRA is unsupported here (bitsandbytes is CUDA-only) -- use training=lora.
+name: directml
