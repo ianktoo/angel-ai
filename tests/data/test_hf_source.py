@@ -78,6 +78,36 @@ def test_load_from_hub_split_mapping(mocker):
     assert "holdout" not in result  # renamed to our canonical split name, not a hub split name
 
 
+def test_load_from_hub_skips_malformed_rows_instead_of_aborting(mocker):
+    """Real-world Hub datasets have occasional bad rows (e.g. empty output).
+    One bad row shouldn't abort loading the other valid rows."""
+    fake = DatasetDict(
+        {
+            "train": Dataset.from_list(
+                [
+                    {"instruction": "Say hi", "input": "", "output": "Hi!"},
+                    {"instruction": "No answer here", "input": "", "output": ""},
+                    {"instruction": "Say bye", "input": "", "output": "Bye!"},
+                ]
+            )
+        }
+    )
+    mocker.patch("datasets.load_dataset", return_value=fake)
+
+    result = load_from_hub("fake/repo")
+    assert len(result["train"]) == 2
+
+
+def test_load_from_hub_all_rows_malformed_raises(mocker):
+    fake = DatasetDict(
+        {"train": Dataset.from_list([{"instruction": "No answer", "input": "", "output": ""}])}
+    )
+    mocker.patch("datasets.load_dataset", return_value=fake)
+
+    with pytest.raises(DatasetFormatError):
+        load_from_hub("fake/repo")
+
+
 def test_load_from_hub_missing_train_raises(mocker):
     fake = DatasetDict(
         {

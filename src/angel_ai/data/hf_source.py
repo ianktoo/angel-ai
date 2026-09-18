@@ -17,6 +17,7 @@ from typing import Any
 from angel_ai.data.converters import alpaca_to_chat, is_alpaca_style
 from angel_ai.data.validation import validate_record
 from angel_ai.errors import DatasetFormatError
+from angel_ai.progress import log
 
 
 def _row_to_canonical(
@@ -80,14 +81,35 @@ def load_from_hub(
             _row_to_canonical(dict(row), prompt_column=prompt_column, response_column=response_column)
             for row in raw_splits[hub_split]
         ]
+
         if validate:
+            # Real-world Hub datasets routinely have a handful of malformed
+            # rows (e.g. an empty `output` field with no assistant turn to
+            # train on). Unlike local JSONL files -- which are user-authored
+            # and should fail fast on a schema mistake -- skip and warn on
+            # individual bad rows here rather than aborting an entire
+            # multi-thousand-row dataset over one row.
+            valid, skipped = [], 0
             for line_number, record in enumerate(converted, start=1):
-                validate_record(record, path=f"{repo_id}#{hub_split}", line_number=line_number)
+                try:
+                    validate_record(record, path=f"{repo_id}#{hub_split}", line_number=line_number)
+                except DatasetFormatError:
+                    skipped += 1
+                else:
+                    valid.append(record)
+            if skipped:
+                log(
+                    f"Skipped {skipped}/{len(converted)} malformed row(s) in "
+                    f"'{repo_id}#{hub_split}' (e.g. missing assistant output).",
+                    style="yellow",
+                )
+            converted = valid
+
         splits[our_split] = Dataset.from_list(converted)
 
-    if "train" not in splits:
+    if "train" not in splits or len(splits["train"]) == 0:
         raise DatasetFormatError(
-            f"No train split found for '{repo_id}' "
+            f"No usable train records found for '{repo_id}' "
             f"(hub splits: {sorted(raw_splits.keys())}, split_mapping: {split_mapping})."
         )
     return DatasetDict(splits)

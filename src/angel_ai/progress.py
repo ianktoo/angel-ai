@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import sys
 from collections.abc import Iterator
 from contextlib import contextmanager
 
@@ -15,6 +16,18 @@ from rich.progress import (
     TimeElapsedColumn,
     TimeRemainingColumn,
 )
+
+# On Windows, redirecting stdout to a file/pipe (rather than an interactive
+# terminal) makes Python fall back to the system locale's codec (cp1252),
+# which can't encode Rich's spinner's Unicode braille characters and crashes
+# the whole process with UnicodeEncodeError. Force UTF-8 so piping output to
+# a log file (a normal thing to do with a training run) doesn't crash.
+for _stream in (sys.stdout, sys.stderr):
+    if hasattr(_stream, "reconfigure"):
+        try:
+            _stream.reconfigure(encoding="utf-8")
+        except (ValueError, OSError):
+            pass
 
 console = Console()
 

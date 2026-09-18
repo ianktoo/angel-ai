@@ -59,6 +59,13 @@ If you're running this on different hardware, the config system should
 adapt, but the DirectML/NPU-specific code paths were only verified against
 the above — expect to file/fix issues.
 
+**Confirmed DirectML size limit on this machine**: `backend=directml` trains
+`qwen2_5_0_5b` reliably, but reproducibly crashes moving `qwen2_5_1_5b` onto
+the device (`RuntimeError: The GPU device instance has been suspended`, at
+`model.to(device)`, regardless of fp32/fp16) — a driver-level limit, not a
+memory-size-tunable one (halving to fp16 didn't help). Use `backend=cpu` for
+larger models on this hardware until/unless a newer DirectML driver fixes it.
+
 ## Setup
 
 Requires [`uv`](https://docs.astral.sh/uv/). `torch-directml` only supports
