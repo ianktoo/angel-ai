@@ -98,6 +98,9 @@ just export optimize.target=npu backend=directml output_dir=outputs/run-1  # exp
 just sweep                                          # Optuna hyperparameter search
 just test                                          # fast unit tests (no model loading)
 just test-slow                                      # + real tiny-model smoke tests
+
+# a bigger model against a real dataset pulled from the Hub instead of the tiny bundled example
+just train backend=cpu model=qwen2_5_1_5b data=hf_alpaca data.max_train_samples=50 output_dir=outputs/run-2
 ```
 
 `output_dir` defaults to a fresh `outputs/<timestamp>` on every invocation, so
