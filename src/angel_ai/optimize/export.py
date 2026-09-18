@@ -55,7 +55,12 @@ def run_export(cfg: DictConfig) -> Path:
 
     backend = get_backend(cfg.backend.name)
     tokenizer = load_tokenizer(cfg.model)
-    model = load_base_model(cfg.model, backend)
+    # "eager" attention: the legacy TorchScript-based ONNX exporter can't
+    # trace newer transformers' default SDPA/masking code path (fails with
+    # `UnsupportedOperatorError: aten::__ior_`) -- eager attention uses a
+    # simpler, ONNX-export-friendly implementation. Training/eval don't need
+    # this override; only tracing for export does.
+    model = load_base_model(cfg.model, backend, attn_implementation="eager")
     model = apply_lora(model, cfg.training, backend)
     model.load_adapter(checkpoint_path / "adapter", adapter_name="default")
     merged_model = model.merge_and_unload()
@@ -72,14 +77,39 @@ def run_export(cfg: DictConfig) -> Path:
     return export_dir
 
 
+def _wrap_for_tracing(model):
+    """Wraps a causal LM so tracing only sees a plain tensor output.
+
+    Modern `transformers` forward passes return a `DynamicCache` object for
+    `past_key_values` even when unused, and the legacy `torch.onnx.export`
+    tracer can't flatten a non-tuple/list/tensor object -- it fails with
+    "Only tuples, lists and Variables are supported as JIT inputs/outputs."
+    Forcing `use_cache=False` and returning only `.logits` sidesteps this.
+    """
+    from torch import nn
+
+    class _LogitsOnly(nn.Module):
+        def __init__(self, inner):
+            super().__init__()
+            self.inner = inner
+
+        def forward(self, input_ids, attention_mask):
+            return self.inner(
+                input_ids=input_ids, attention_mask=attention_mask, use_cache=False
+            ).logits
+
+    return _LogitsOnly(model)
+
+
 def _export_to_onnx(model, tokenizer, onnx_path: Path, *, quantization: str | None) -> None:
     import torch
 
     model.eval()
+    wrapped = _wrap_for_tracing(model)
     dummy_input = tokenizer("angel-ai export dry run", return_tensors="pt")
 
     torch.onnx.export(
-        model,
+        wrapped,
         (dummy_input["input_ids"], dummy_input["attention_mask"]),
         str(onnx_path),
         input_names=["input_ids", "attention_mask"],

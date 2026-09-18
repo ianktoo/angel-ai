@@ -66,6 +66,13 @@ the device (`RuntimeError: The GPU device instance has been suspended`, at
 memory-size-tunable one (halving to fp16 didn't help). Use `backend=cpu` for
 larger models on this hardware until/unless a newer DirectML driver fixes it.
 
+**Confirmed ONNX export memory limit on this machine**: `optimize.export`
+reliably works for `qwen2_5_0_5b`, but segfaults with no Python traceback
+when exporting `qwen2_5_1_5b` (fp32 weights alone are ~6GB, and tracing +
+protobuf serialization needs headroom on top of that within 15GB shared
+RAM). Export the smaller model on this hardware, or export from a machine/
+environment with more RAM.
+
 ## Setup
 
 Requires [`uv`](https://docs.astral.sh/uv/). `torch-directml` only supports
