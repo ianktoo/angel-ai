@@ -74,8 +74,10 @@ uv sync --extra directml   # this machine (AMD iGPU via DirectML)
 ```
 
 Optionally install [`just`](https://github.com/casey/just) as a task runner
-(`uv tool install just`) — every `just <task>` below has a plain-script
-equivalent under `scripts/` (both `.sh` and `.ps1`) if you'd rather not.
+(`uv tool install rust-just` — **not** `uv tool install just`, which installs
+an unrelated PyPI package of the same name) — every `just <task>` below has a
+plain-script equivalent under `scripts/` (both `.sh` and `.ps1`) if you'd
+rather not.
 
 ## Running the pipeline
 
