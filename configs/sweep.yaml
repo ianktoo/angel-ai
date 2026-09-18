@@ -1,0 +1,19 @@
+# Entry config for the hyperparameter sweep stage:
+# `uv run python -m angel_ai.optimize.sweep`
+defaults:
+  - backend: auto
+  - model: qwen2_5_0_5b
+  - training: lora
+  - data: tiny
+  - eval: default
+  - optimize: sweep
+  - _self_
+
+seed: 42
+output_dir: outputs/${now:%Y-%m-%d_%H-%M-%S}
+
+hydra:
+  run:
+    dir: ${output_dir}/hydra
+  job:
+    chdir: false

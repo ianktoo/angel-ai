@@ -1,0 +1,20 @@
+# LoRA finetuning -- works on every backend (directml/cuda/cpu).
+method: lora
+lora:
+  r: 8
+  alpha: 16
+  dropout: 0.05
+  target_modules: ["q_proj", "v_proj"]
+quantization: null # set to "qlora" only under backend=cuda
+
+learning_rate: 2.0e-4
+num_epochs: 1
+max_steps: null # set by dry-run overrides for a 1-step sanity pass
+per_device_train_batch_size: 1
+gradient_accumulation_steps: 8
+gradient_checkpointing: true
+
+logging_steps: 10
+save_steps: 50
+keep_last_n_checkpoints: 3
+resume_from_checkpoint: null # "latest", an explicit path, or null

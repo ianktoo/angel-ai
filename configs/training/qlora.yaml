@@ -1,0 +1,22 @@
+# QLoRA -- CUDA-only (bitsandbytes has no DirectML/CPU kernel). The training
+# stage raises UnsupportedConfigError if this is combined with a backend that
+# reports supports_quantization("qlora") == False.
+method: qlora
+lora:
+  r: 16
+  alpha: 32
+  dropout: 0.05
+  target_modules: ["q_proj", "v_proj", "k_proj", "o_proj"]
+quantization: qlora
+
+learning_rate: 2.0e-4
+num_epochs: 1
+max_steps: null
+per_device_train_batch_size: 2
+gradient_accumulation_steps: 4
+gradient_checkpointing: true
+
+logging_steps: 10
+save_steps: 50
+keep_last_n_checkpoints: 3
+resume_from_checkpoint: null

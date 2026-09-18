@@ -1,0 +1,19 @@
+# Top-level Hydra config: composes backend/model/training/data/eval groups.
+# Override anything from the CLI, e.g.:
+#   uv run python -m angel_ai.training backend=directml model=qwen2_5_0_5b training=lora
+defaults:
+  - backend: auto
+  - model: qwen2_5_0_5b
+  - training: lora
+  - data: tiny
+  - eval: default
+  - _self_
+
+seed: 42
+output_dir: outputs/${now:%Y-%m-%d_%H-%M-%S}
+
+hydra:
+  run:
+    dir: ${output_dir}/hydra
+  job:
+    chdir: false

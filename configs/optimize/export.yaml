@@ -1,0 +1,8 @@
+# Post-training export/quantization for fast local inference.
+# target: npu  -> ONNX + Vitis AI execution provider (this machine's NPU, inference-only)
+#         igpu -> ONNX + DirectML execution provider
+#         cpu  -> ONNX + CPU execution provider
+target: npu
+quantization: int8
+checkpoint: null # path to a training checkpoint's "adapter" dir, or null for latest
+export_dir: outputs/exports/${now:%Y-%m-%d_%H-%M-%S}

@@ -1,0 +1,7 @@
+# Optuna hyperparameter sweep over training configs.
+n_trials: 10
+direction: minimize # minimize eval loss
+search_space:
+  learning_rate: { type: loguniform, low: 1.0e-5, high: 5.0e-4 }
+  lora.r: { type: categorical, choices: [4, 8, 16, 32] }
+sweep_output_dir: outputs/sweeps/${now:%Y-%m-%d_%H-%M-%S}

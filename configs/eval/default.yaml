@@ -1,0 +1,3 @@
+metrics: ["loss", "perplexity"]
+batch_size: 1
+max_seq_length: 512
