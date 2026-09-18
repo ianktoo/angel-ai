@@ -39,8 +39,7 @@ chasing expensive GPUs.
 - **Local experiment tracking** (`angel_ai/tracking/`): MLflow with a local
   file store — no server, no account.
 
-See [`docs/architecture.md`](docs/architecture.md) if present, or the
-module docstrings in `src/angel_ai/`, for more detail.
+See the module docstrings in `src/angel_ai/` for more detail on any piece.
 
 ## Hardware this was developed against
 
@@ -82,16 +81,22 @@ rather not.
 ## Running the pipeline
 
 ```bash
-just setup                 # install Python 3.11 + sync deps for the detected backend
+just setup                 # install Python 3.11 + sync deps (defaults to cpu)
+just backend=directml setup # ...or pick the extras group explicitly (directml/cuda/cpu)
 just check                 # lint + validate configs (no model loading)
 just dry-run                # 1-step sanity pass through the full pipeline, tiny model/dataset
-just train backend=directml model=qwen2_5_0_5b training=lora data=tiny
-just infer backend=directml                       # evaluate the latest checkpoint
-just export target=npu backend=directml           # export + quantize for the NPU
+just train backend=directml model=qwen2_5_0_5b training=lora data=tiny output_dir=outputs/run-1
+just infer backend=directml output_dir=outputs/run-1              # evaluate that run's latest checkpoint
+just export optimize.target=npu backend=directml output_dir=outputs/run-1  # export + quantize for the NPU
 just sweep                                          # Optuna hyperparameter search
 just test                                          # fast unit tests (no model loading)
 just test-slow                                      # + real tiny-model smoke tests
 ```
+
+`output_dir` defaults to a fresh `outputs/<timestamp>` on every invocation, so
+**pass the same `output_dir` to `train`, `infer`, and `export`** to point them
+at the same run — otherwise `infer`/`export` land in a new, empty directory
+and silently fall back to evaluating/exporting the base (un-finetuned) model.
 
 Without `just`, the equivalent commands are `uv run python -m
 angel_ai.training [overrides...]`, `angel_ai.evaluation`,
@@ -129,7 +134,7 @@ Datasets are JSONL, one chat-style record per line:
 | `directml` | Yes (iGPU/dGPU) | No | This machine's Radeon 840M target |
 | `cuda`     | Yes | Yes | Local NVIDIA GPU, or cloud (Colab, see `docs/colab.md`) |
 | `cpu`      | Yes (slow) | No | Always available; used for tests/dry-runs |
-| NPU (Ryzen AI) | No (inference only) | n/a | Reached via `optimize.export target=npu`, not `backend=` |
+| NPU (Ryzen AI) | No (inference only) | n/a | Reached via `optimize.target=npu` on the export stage, not `backend=` |
 
 Requesting an unsupported combination (e.g. `training=qlora backend=directml`)
 raises `angel_ai.errors.UnsupportedConfigError` with the incompatible field
@@ -159,6 +164,10 @@ Google Drive so they survive session resets.
 
 ## Troubleshooting
 
+- **`infer`/`export` says "No checkpoint found; evaluating the base model"**:
+  you didn't pass the same `output_dir` used for training. `output_dir`
+  defaults to a fresh timestamp per invocation, so training, inference, and
+  export must share an explicit `output_dir=...` to find the same checkpoint.
 - **`torch-directml` import fails / ImportError**: confirm you're on Python
   3.10–3.12 (`uv run python --version`) and ran `uv sync --extra directml`,
   not `--extra cpu`.
@@ -170,8 +179,8 @@ Google Drive so they survive session resets.
 - **NPU export fails to load a provider**: the Vitis AI execution provider
   requires AMD's Ryzen AI SDK/driver to be installed separately — this repo
   only handles the ONNX export/quantization side. Fall back to
-  `optimize.export target=igpu` (DirectML EP) or `target=cpu` if it isn't
-  installed.
+  `optimize.target=igpu` (DirectML EP) or `optimize.target=cpu` on the export
+  stage if it isn't installed.
 
 ## License
 
